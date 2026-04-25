@@ -61,7 +61,11 @@
     },
     "/sync/handshake": {
       "schema": "clockSync",
-      "description": "Document used for clock calibration"
+      "description": "Document used for clock calibration (deprecated)"
+    },
+    "/sessions/{sessionId}": {
+      "schema": "clockSync",
+      "description": "Per-session document used for precise clock calibration"
     }
   }
 }

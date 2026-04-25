@@ -25,7 +25,7 @@ const stateColors: Record<TimerState, string> = {
 
 export function StatusBadge({ isConnected, isCalibrated, isLocked, timerState }: StatusBadgeProps) {
   return (
-    <div className="flex flex-wrap gap-2 justify-center items-center mb-4">
+    <div className="flex flex-wrap gap-2 justify-center items-center mb-6">
       {/* Clock Calibration Status */}
       <div className={cn(
         "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",

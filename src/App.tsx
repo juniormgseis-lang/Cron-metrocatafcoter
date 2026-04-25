@@ -304,7 +304,7 @@ export default function App() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md mt-2 p-1 bg-gradient-to-r from-accent/50 via-primary/50 to-accent/50 rounded-2xl shadow-2xl"
+            className="w-full max-w-md mt-4 p-1 bg-gradient-to-r from-accent/50 via-primary/50 to-accent/50 rounded-2xl shadow-2xl"
           >
             <button
               onClick={handleEnableAudio}
@@ -322,9 +322,9 @@ export default function App() {
         )}
 
         {/* Timer Display */}
-        <div className="flex-1 flex flex-col items-center justify-center w-full py-4">
+        <div className="flex-1 flex flex-col items-center justify-center w-full py-8">
             <div 
-              className={`timer-font text-[30vw] md:text-[200px] leading-none mb-2 select-none transition-colors duration-500 ${
+              className={`timer-font text-[30vw] md:text-[200px] leading-none mb-4 select-none transition-colors duration-500 ${
                 elapsed >= 720 
                   ? 'text-destructive drop-shadow-[0_0_30px_hsl(var(--destructive)/0.5)]' 
                   : elapsed >= 660
@@ -336,9 +336,9 @@ export default function App() {
            </div>
         </div>
 
-        <div className="w-full pb-6 flex flex-col items-center gap-4">
+        <div className="w-full pb-12 flex flex-col items-center gap-8">
           {!isAdmin ? (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-6">
               <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
               <button
                 onClick={() => setShowLogin(true)}
@@ -366,7 +366,7 @@ export default function App() {
                    onLogout={handleLogout}
                    onKickAdmins={handleKickOthers}
                  />
-                 <div className="mt-4">
+                 <div className="mt-8">
                     <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
                  </div>
                </motion.div>

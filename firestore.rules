@@ -84,6 +84,19 @@ service cloud.firestore {
       );
     }
 
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow write: if (
+        isValidId(sessionId)
+        && incoming().ping is timestamp 
+        && incoming().ping == request.time
+        && incoming().sample is number
+        && incoming().signature is string
+        && (incoming().keys().hasAll(['ping', 'sample', 'signature']))
+        && incoming().keys().size() == 3
+      );
+    }
+
     // --- Admins Collection ---
     match /admins/{uid} {
       // Only existing admins can add new admins, 

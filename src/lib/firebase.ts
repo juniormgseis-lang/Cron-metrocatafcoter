@@ -29,11 +29,12 @@ export const db: Firestore = initializeFirestore(app, {
 // --- CLOCK SYNCHRONIZATION (NTP-STYLE) ---
 let currentOffset = 0;
 let isCalibrated = false;
+const sessionSyncId = Math.random().toString(36).substring(2, 15);
 
-export const calibrateClock = async () => {
-  if (isCalibrated) return; // Only calibrate once at start unless forced
-  const syncDoc = doc(db, 'sync', 'handshake');
-  const samples = 4; // Increased samples
+export const calibrateClock = async (force = false) => {
+  if (isCalibrated && !force) return;
+  const syncDoc = doc(db, 'sessions', `sync_${sessionSyncId}`);
+  const samples = force ? 3 : 5; // Use fewer samples for periodic re-sync
   let bestRtt = Infinity;
   let bestOffset = 0;
   const signature = getQuickSignature();
@@ -41,7 +42,7 @@ export const calibrateClock = async () => {
   for (let i = 0; i < samples; i++) {
     try {
       const t0 = Date.now();
-      // Added signature to match security rules
+      // Use setDoc with a unique ID to avoid collisions
       await setDoc(syncDoc, { 
         ping: serverTimestamp(), 
         sample: i,
@@ -54,28 +55,35 @@ export const calibrateClock = async () => {
         const rtt = t1 - t0;
         const srv = (snap.data().ping as Timestamp).toMillis();
         
-        // We take the sample with the lowest RTT (jitter filtering)
+        // NTP Filter: we take the sample with the lowest RTT (jitter filtering)
         if (rtt < bestRtt) {
           bestRtt = rtt;
           bestOffset = srv - (t0 + t1) / 2;
         }
       }
-      await new Promise(r => setTimeout(r, 200));
+      // Wait a bit between samples to avoid burst noise
+      await new Promise(r => setTimeout(r, 150));
     } catch (e) {
-      console.warn('[Sync] Calibragem falhou...', e);
+      console.warn('[Sync] Sample failed:', e);
     }
   }
 
   if (bestRtt !== Infinity) {
-    currentOffset = bestOffset;
+    // Smooth transition for offset to avoid jumps in timer display
+    if (!isCalibrated) {
+      currentOffset = bestOffset;
+    } else {
+      // 20% weight to new best sample for stability
+      currentOffset = (currentOffset * 0.8) + (bestOffset * 0.2);
+    }
     isCalibrated = true;
-    console.log(`[Sync] Calibrado (RTT: ${bestRtt}ms, Offset: ${currentOffset}ms)`);
+    console.log(`[Sync] ${force ? 'Refined' : 'Calibrated'} (RTT: ${bestRtt}ms, Offset: ${currentOffset.toFixed(2)}ms)`);
   }
 };
 
 calibrateClock();
-// Re-sync every minute for high precision
-setInterval(calibrateClock, 60000);
+// Re-sync every 30 seconds for high precision, forcing it to run
+setInterval(() => calibrateClock(true), 30000);
 
 export const getServerNow = () => Date.now() + currentOffset;
 export const getIsCalibrated = () => isCalibrated;

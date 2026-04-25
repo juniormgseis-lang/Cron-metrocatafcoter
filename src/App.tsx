@@ -299,60 +299,27 @@ export default function App() {
           timerState={state} 
         />
 
-        {/* Action Required: Audio & Manual Wake Lock */}
-        <div className="w-full max-w-md flex flex-col gap-3 my-4">
-          {!audioEnabled && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-1 bg-gradient-to-r from-accent/50 via-primary/50 to-accent/50 rounded-2xl shadow-2xl"
-            >
-              <button
-                onClick={handleEnableAudio}
-                className="w-full flex items-center justify-center gap-3 p-5 bg-card text-foreground rounded-[14px] font-black uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
-              >
-                <div className="bg-accent p-2 rounded-full text-accent-foreground animate-pulse">
-                  <Volume2 size={24} />
-                </div>
-                <div className="flex flex-col items-start translate-y-0.5">
-                  <span className="text-sm leading-none">Ativar Alertas e Voz</span>
-                  <span className="text-[10px] font-medium opacity-60 normal-case mt-1">Necessário para ouvir os sinais</span>
-                </div>
-              </button>
-            </motion.div>
-          )}
-
+        {/* Action Required: Audio (Top Position) */}
+        {!audioEnabled && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={cn(
-              "p-1 rounded-2xl transition-all duration-500",
-              manualWakeLock 
-                ? "bg-gradient-to-r from-orange-500/30 via-accent/30 to-orange-500/30 shadow-lg" 
-                : "bg-muted/50 border border-border/50"
-            )}
+            className="w-full max-w-md mt-4 p-1 bg-gradient-to-r from-accent/50 via-primary/50 to-accent/50 rounded-2xl shadow-2xl"
           >
             <button
-              onClick={toggleManualWakeLock}
-              className="w-full flex items-center justify-center gap-3 p-4 bg-card text-foreground rounded-[14px] font-bold uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
+              onClick={handleEnableAudio}
+              className="w-full flex items-center justify-center gap-3 p-5 bg-card text-foreground rounded-[14px] font-black uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
             >
-              <div className={cn(
-                "p-2 rounded-full transition-colors",
-                manualWakeLock ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"
-              )}>
-                {manualWakeLock ? <Lock size={20} /> : <Settings size={20} />}
+              <div className="bg-accent p-2 rounded-full text-accent-foreground animate-pulse">
+                <Volume2 size={24} />
               </div>
               <div className="flex flex-col items-start translate-y-0.5">
-                <span className="text-sm leading-none">
-                  {manualWakeLock ? "Tela Travada (Ligada)" : "Tela Livre (Pode Apagar)"}
-                </span>
-                <span className="text-[10px] font-medium opacity-60 normal-case mt-1">
-                  {manualWakeLock ? "O app manterá sua tela sempre ativa" : "Clique para impedir que a tela apague"}
-                </span>
+                <span className="text-sm leading-none">Ativar Alertas e Voz</span>
+                <span className="text-[10px] font-medium opacity-60 normal-case mt-1">Necessário para ouvir os sinais</span>
               </div>
             </button>
           </motion.div>
-        </div>
+        )}
 
         {/* Timer Display */}
         <div className="flex-1 flex flex-col items-center justify-center w-full py-8">
@@ -369,8 +336,7 @@ export default function App() {
            </div>
         </div>
 
-        {/* Controls Section */}
-        <div className="w-full pb-12">
+        <div className="w-full pb-12 flex flex-col items-center gap-8">
           {!isAdmin ? (
             <div className="flex flex-col items-center gap-6">
               <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
@@ -388,6 +354,7 @@ export default function App() {
                  initial={{ opacity: 0, scale: 0.95 }}
                  animate={{ opacity: 1, scale: 1 }}
                  exit={{ opacity: 0, scale: 0.95 }}
+                 className="w-full"
                >
                  <TimerControls 
                    state={state}
@@ -405,6 +372,40 @@ export default function App() {
                </motion.div>
             </AnimatePresence>
           )}
+
+          {/* Wake Lock Button (Bottom Position) */}
+          <div className="w-full max-w-md flex flex-col gap-3">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={cn(
+                "p-1 rounded-2xl transition-all duration-500",
+                manualWakeLock 
+                  ? "bg-gradient-to-r from-orange-500/30 via-accent/30 to-orange-500/30 shadow-lg" 
+                  : "bg-muted/50 border border-border/50"
+              )}
+            >
+              <button
+                onClick={toggleManualWakeLock}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-card text-foreground rounded-[14px] font-bold uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
+              >
+                <div className={cn(
+                  "p-2 rounded-full transition-colors",
+                  manualWakeLock ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"
+                )}>
+                  {manualWakeLock ? <Lock size={20} /> : <Settings size={20} />}
+                </div>
+                <div className="flex flex-col items-start translate-y-0.5">
+                  <span className="text-sm leading-none">
+                    {manualWakeLock ? "Tela Travada (Ligada)" : "Tela Livre (Pode Apagar)"}
+                  </span>
+                  <span className="text-[10px] font-medium opacity-60 normal-case mt-1">
+                    {manualWakeLock ? "O app manterá sua tela sempre ativa" : "Clique para impedir que a tela apague"}
+                  </span>
+                </div>
+              </button>
+            </motion.div>
+          </div>
         </div>
       </div>
 

@@ -158,8 +158,8 @@ export default function App() {
 
   // Main Wake Lock Management
   useEffect(() => {
-    // Keep screen on if timer is running OR if we are in admin mode OR manual override
-    const shouldBeLocked = state === 'running' || isAdmin || manualWakeLock;
+    // Keep screen on if timer is running, finished, admin mode, or manual override
+    const shouldBeLocked = state === 'running' || state === 'finished' || isAdmin || manualWakeLock;
     
     if (shouldBeLocked) {
       requestWakeLock();
@@ -168,11 +168,18 @@ export default function App() {
     }
   }, [state, isAdmin, manualWakeLock]);
 
+  // Specific re-lock for critical timer events (warnings/finish)
+  useEffect(() => {
+    if (elapsed === 660 || elapsed === 720) {
+      requestWakeLock();
+    }
+  }, [elapsed]);
+
   // Global Re-acquisition on Interaction
   // Mobile browsers often require a fresh gesture to keep the lock/video active
   useEffect(() => {
     const reacquireOnInteraction = () => {
-      const shouldBeLocked = state === 'running' || isAdmin || manualWakeLock;
+      const shouldBeLocked = state === 'running' || state === 'finished' || isAdmin || manualWakeLock;
       if (shouldBeLocked && !isWakeLocked) {
         requestWakeLock();
       }
@@ -193,7 +200,7 @@ export default function App() {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        const shouldBeLocked = state === 'running' || isAdmin || manualWakeLock;
+        const shouldBeLocked = state === 'running' || state === 'finished' || isAdmin || manualWakeLock;
         if (shouldBeLocked) {
           await requestWakeLock();
         }
@@ -281,14 +288,14 @@ export default function App() {
     // Immediate action on user gesture to improve reliability on mobile
     if (nextValue) {
       await requestWakeLock();
-    } else if (state !== 'running' && !isAdmin) {
+    } else if (state !== 'running' && state !== 'finished' && !isAdmin) {
       // Only release if no other reason to keep it locked
       await releaseWakeLock();
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between bg-background text-foreground transition-colors overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-between bg-background text-foreground transition-colors overflow-hidden border border-primary/20">
       <div className="w-full flex-1 flex flex-col items-center max-w-4xl mx-auto px-4">
         <TafHeader />
         

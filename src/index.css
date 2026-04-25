@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  --font-timer: "JetBrains Mono", monospace;
+  --font-body: "Inter", sans-serif;
+
+  /* Semantic mappings for Tailwind */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* Timer specifics */
+  --color-timer: hsl(var(--timer-color));
+  --color-timer-glow: hsl(var(--timer-glow));
+  --color-status-running: hsl(var(--status-running));
+  --color-status-running-foreground: hsl(var(--background));
+  --color-status-paused: hsl(var(--status-paused));
+  --color-status-paused-foreground: hsl(var(--background));
+  --color-status-finished: hsl(var(--status-finished));
+  --color-status-finished-foreground: hsl(var(--background));
+  --color-header-bg: hsl(var(--header-bg));
+  --color-btn-reset: hsl(var(--btn-reset));
+  --color-btn-reset-foreground: hsl(var(--btn-reset-foreground));
+}
+
+@layer base {
+  :root, .theme-military {
+    --background: 150 10% 10%; /* verde-escuro quase preto */
+    --foreground: 45 80% 85%; /* areia/dourado claro */
+    --card: 150 12% 14%;
+    --card-foreground: 45 80% 85%;
+    --popover: 150 12% 14%;
+    --popover-foreground: 45 80% 85%;
+    --primary: 45 90% 50%; /* dourado/âmbar — botões principais */
+    --primary-foreground: 150 10% 10%;
+    --secondary: 150 15% 20%;
+    --secondary-foreground: 45 80% 85%;
+    --muted: 150 10% 18%;
+    --muted-foreground: 150 10% 55%;
+    --accent: 120 100% 30%; /* Verde militar saturado */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 15% 25%;
+    --input: 150 15% 25%;
+    --ring: 45 90% 50%;
+    --radius: 0.5rem;
+    
+    /* Tokens específicos do cronômetro */
+    --timer-color: 45 90% 55%;
+    --timer-glow: 45 90% 50%;
+    --status-running: 120 70% 45%;
+    --status-paused: 45 90% 50%;
+    --status-finished: 0 70% 50%;
+    --header-bg: 120 60% 15%;
+    --btn-reset: 200 80% 65%; /* Azul claro solicitado */
+    --btn-reset-foreground: 200 20% 10%;
+  }
+
+  .theme-night {
+    --background: 220 20% 6%;
+    --foreground: 200 20% 90%;
+    --card: 220 20% 10%;
+    --card-foreground: 200 20% 95%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 220 20% 95%;
+    --primary: 200 100% 50%; /* ciano elétrico */
+    --primary-foreground: 220 20% 6%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 220 15% 14%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 200 100% 45%;
+    --accent-foreground: 220 20% 6%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 200 100% 50%;
+    --radius: 0.75rem;
+    --timer-color: 200 100% 60%;
+    --timer-glow: 200 100% 50%;
+    --status-running: 160 80% 45%; /* Esmeralda */
+    --status-paused: 45 100% 50%;
+    --status-finished: 0 80% 55%;
+    --header-bg: 220 30% 12%;
+    --btn-reset: 220 15% 25%;
+    --btn-reset-foreground: 0 0% 100%;
+  }
+
+  .theme-light {
+    --background: 210 20% 98%;
+    --foreground: 220 30% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 15%;
+    --primary: 220 100% 40%; /* Azul real */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 92%;
+    --secondary-foreground: 220 30% 15%;
+    --muted: 210 10% 90%;
+    --muted-foreground: 210 10% 40%;
+    --accent: 220 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 20% 85%;
+    --input: 210 20% 85%;
+    --ring: 220 100% 40%;
+    --radius: 1rem;
+    --timer-color: 220 30% 15%;
+    --timer-glow: 220 100% 40%;
+    --status-running: 140 60% 40%;
+    --status-paused: 35 90% 45%;
+    --status-finished: 0 70% 50%;
+    --header-bg: 220 10% 95%;
+    --btn-reset: 0 0% 20%;
+    --btn-reset-foreground: 0 0% 100%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+.timer-font {
+  font-family: var(--font-timer);
+  font-weight: 800;
+}

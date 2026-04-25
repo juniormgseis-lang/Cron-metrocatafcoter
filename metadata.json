@@ -1,0 +1,6 @@
+{
+  "name": "Segurança Temas: Remix: Cronômetro TAF",
+  "description": "Cronômetro sincronizado em tempo real para o Teste de Aptidão Física (TAF) do Exército Brasileiro.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": []
+}

@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "timerStatus": {
+      "title": "Timer Status",
+      "description": "Global state for the TAF timer synchronization",
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["idle", "running", "paused", "finished"],
+          "description": "Current state of the timer"
+        },
+        "startTime": {
+          "type": "object",
+          "description": "Firestore Timestamp for when the timer started/resumed"
+        },
+        "accumulatedTime": {
+          "type": "number",
+          "description": "Accumulated milliseconds before the last pause"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Cryptographic signature for frontend integrity validation"
+        },
+        "kickSignal": {
+          "type": "object",
+          "description": "Broadcast signal to logout other sessions",
+          "properties": {
+            "sourceId": { "type": "string" },
+            "timestamp": { "type": "object" }
+          }
+        }
+      },
+      "required": ["state", "accumulatedTime", "signature"]
+    },
+    "clockSync": {
+      "title": "Clock Sync Handshake",
+      "description": "Used for NTP-style clock synchronization",
+      "type": "object",
+      "properties": {
+        "ping": {
+          "type": "object",
+          "description": "Server timestamp"
+        },
+        "sample": {
+          "type": "number",
+          "description": "Sample index"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Frontend integrity signature"
+        }
+      },
+      "required": ["ping", "sample", "signature"]
+    }
+  },
+  "firestore": {
+    "/sync/timer": {
+      "schema": "timerStatus",
+      "description": "Single document for real-time timer state synchronization"
+    },
+    "/sync/handshake": {
+      "schema": "clockSync",
+      "description": "Document used for clock calibration"
+    }
+  }
+}

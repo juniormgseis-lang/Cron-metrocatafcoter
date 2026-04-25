@@ -22,6 +22,7 @@ export class WakeLockFallback {
       this.video.style.left = '-10px';
       this.video.style.opacity = '0.01';
       this.video.src = BLANK_VIDEO_B64;
+      document.body.appendChild(this.video);
     }
   }
 

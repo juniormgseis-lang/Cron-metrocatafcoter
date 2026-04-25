@@ -11,8 +11,9 @@ import { ThemeSwitcher } from './components/ThemeSwitcher';
 import { TimerControls } from './components/TimerControls';
 import { useTimer } from './hooks/useTimer';
 import { getStoredTheme, type Theme } from './lib/themes';
-import { ShieldAlert, Volume2, LogOut, Settings } from 'lucide-react';
+import { ShieldAlert, Volume2, LogOut, Settings, Lock } from 'lucide-react';
 import { WakeLockFallback } from './lib/nosleep';
+import { cn } from './lib/utils';
 import { auth, db, doc, onSnapshot, updateDoc, serverTimestamp } from './lib/firebase';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { requestNotificationPermission } from './lib/audio';
@@ -31,6 +32,7 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [isWakeLocked, setIsWakeLocked] = useState(false);
+  const [manualWakeLock, setManualWakeLock] = useState(true); // Default to true as it was intended
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [loginTime, setLoginTime] = useState<number>(Date.now());
   
@@ -105,24 +107,44 @@ export default function App() {
   // Wake Lock Logic
   const requestWakeLock = async () => {
     // Both native API and Video fallback
-    nosleep.activate();
+    try {
+      await nosleep.activate();
+    } catch (e) {
+      console.warn('Fallback Nosleep failed', e);
+    }
     
     if ('wakeLock' in navigator) {
       try {
-        if (wakeLockRef.current) return;
+        if (wakeLockRef.current) {
+          // If already has a lock, we don't necessarily need a new one, 
+          // but we check if it's released
+          if (!wakeLockRef.current.released) return;
+        }
+        
         wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
         setIsWakeLocked(true);
-        // ...
+
+        wakeLockRef.current.addEventListener('release', () => {
+          setIsWakeLocked(false);
+          wakeLockRef.current = null;
+          // Strategy: if it was released by system (e.g. battery), we might want to try again on next interaction
+        });
       } catch (err) {
+        console.warn('Native Wake Lock logic error (falling back):', err);
+        // If native fails, we still consider it locked because Nosleep fallback is active
         setIsWakeLocked(true);
       }
     } else {
+      // If native not supported, we rely on video fallback which we already called activate() for
       setIsWakeLocked(true);
     }
   };
 
   const releaseWakeLock = async () => {
-    nosleep.deactivate();
+    try {
+      nosleep.deactivate();
+    } catch (e) {}
+
     if (wakeLockRef.current) {
       try {
         await wakeLockRef.current.release();
@@ -134,25 +156,52 @@ export default function App() {
     setIsWakeLocked(false);
   };
 
+  // Main Wake Lock Management
   useEffect(() => {
-    // Keep screen on if timer is running OR if we are in admin mode
-    if (state === 'running' || isAdmin) {
+    // Keep screen on if timer is running OR if we are in admin mode OR manual override
+    const shouldBeLocked = state === 'running' || isAdmin || manualWakeLock;
+    
+    if (shouldBeLocked) {
       requestWakeLock();
     } else {
       releaseWakeLock();
     }
-  }, [state, isAdmin]);
+  }, [state, isAdmin, manualWakeLock]);
+
+  // Global Re-acquisition on Interaction
+  // Mobile browsers often require a fresh gesture to keep the lock/video active
+  useEffect(() => {
+    const reacquireOnInteraction = () => {
+      const shouldBeLocked = state === 'running' || isAdmin || manualWakeLock;
+      if (shouldBeLocked && !isWakeLocked) {
+        requestWakeLock();
+      }
+    };
+
+    window.addEventListener('mousedown', reacquireOnInteraction);
+    window.addEventListener('touchstart', reacquireOnInteraction);
+    window.addEventListener('keydown', reacquireOnInteraction);
+
+    return () => {
+      window.removeEventListener('mousedown', reacquireOnInteraction);
+      window.removeEventListener('touchstart', reacquireOnInteraction);
+      window.removeEventListener('keydown', reacquireOnInteraction);
+    };
+  }, [state, isAdmin, isWakeLocked]);
 
   // Handle visibility change for Wake Lock re-acquisition
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      if (wakeLockRef.current !== null && document.visibilityState === 'visible') {
-        await requestWakeLock();
+      if (document.visibilityState === 'visible') {
+        const shouldBeLocked = state === 'running' || isAdmin || manualWakeLock;
+        if (shouldBeLocked) {
+          await requestWakeLock();
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [state, isAdmin, manualWakeLock]);
 
   // Notifications permission
   const handleEnableAudio = async () => {
@@ -225,6 +274,19 @@ export default function App() {
     window.location.reload();
   };
 
+  const toggleManualWakeLock = async () => {
+    const nextValue = !manualWakeLock;
+    setManualWakeLock(nextValue);
+    
+    // Immediate action on user gesture to improve reliability on mobile
+    if (nextValue) {
+      await requestWakeLock();
+    } else if (state !== 'running' && !isAdmin) {
+      // Only release if no other reason to keep it locked
+      await releaseWakeLock();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-background text-foreground transition-colors overflow-hidden">
       <div className="w-full flex-1 flex flex-col items-center max-w-4xl mx-auto px-4">
@@ -233,31 +295,64 @@ export default function App() {
         <StatusBadge 
           isConnected={isConnected} 
           isCalibrated={isCalibrated}
-          isLocked={isWakeLocked} 
+          isLocked={isWakeLocked || manualWakeLock || state === 'running' || isAdmin} 
           timerState={state} 
         />
 
-        {/* Action Required: Audio & Notifications */}
-        {!audioEnabled && (
+        {/* Action Required: Audio & Manual Wake Lock */}
+        <div className="w-full max-w-md flex flex-col gap-3 my-4">
+          {!audioEnabled && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-1 bg-gradient-to-r from-accent/50 via-primary/50 to-accent/50 rounded-2xl shadow-2xl"
+            >
+              <button
+                onClick={handleEnableAudio}
+                className="w-full flex items-center justify-center gap-3 p-5 bg-card text-foreground rounded-[14px] font-black uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
+              >
+                <div className="bg-accent p-2 rounded-full text-accent-foreground animate-pulse">
+                  <Volume2 size={24} />
+                </div>
+                <div className="flex flex-col items-start translate-y-0.5">
+                  <span className="text-sm leading-none">Ativar Alertas e Voz</span>
+                  <span className="text-[10px] font-medium opacity-60 normal-case mt-1">Necessário para ouvir os sinais</span>
+                </div>
+              </button>
+            </motion.div>
+          )}
+
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md my-4 p-1 bg-gradient-to-r from-accent/50 via-primary/50 to-accent/50 rounded-2xl shadow-2xl"
+            className={cn(
+              "p-1 rounded-2xl transition-all duration-500",
+              manualWakeLock 
+                ? "bg-gradient-to-r from-orange-500/30 via-accent/30 to-orange-500/30 shadow-lg" 
+                : "bg-muted/50 border border-border/50"
+            )}
           >
             <button
-              onClick={handleEnableAudio}
-              className="w-full flex items-center justify-center gap-3 p-5 bg-card text-foreground rounded-[14px] font-black uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
+              onClick={toggleManualWakeLock}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-card text-foreground rounded-[14px] font-bold uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
             >
-              <div className="bg-accent p-2 rounded-full text-accent-foreground animate-pulse">
-                <Volume2 size={24} />
+              <div className={cn(
+                "p-2 rounded-full transition-colors",
+                manualWakeLock ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"
+              )}>
+                {manualWakeLock ? <Lock size={20} /> : <Settings size={20} />}
               </div>
               <div className="flex flex-col items-start translate-y-0.5">
-                <span className="text-sm leading-none">Ativar Alertas e Voz</span>
-                <span className="text-[10px] font-medium opacity-60 normal-case mt-1">Necessário para ouvir os sinais e receber notificações</span>
+                <span className="text-sm leading-none">
+                  {manualWakeLock ? "Tela Travada (Ligada)" : "Tela Livre (Pode Apagar)"}
+                </span>
+                <span className="text-[10px] font-medium opacity-60 normal-case mt-1">
+                  {manualWakeLock ? "O app manterá sua tela sempre ativa" : "Clique para impedir que a tela apague"}
+                </span>
               </div>
             </button>
           </motion.div>
-        )}
+        </div>
 
         {/* Timer Display */}
         <div className="flex-1 flex flex-col items-center justify-center w-full py-8">

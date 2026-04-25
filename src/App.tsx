@@ -296,8 +296,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-background text-foreground transition-colors overflow-hidden border border-primary/20">
+      <TafHeader />
       <div className="w-full flex-1 flex flex-col items-center max-w-4xl mx-auto px-4">
-        <TafHeader />
         
         <StatusBadge 
           isConnected={isConnected} 

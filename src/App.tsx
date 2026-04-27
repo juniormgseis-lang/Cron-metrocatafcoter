@@ -12,7 +12,7 @@ import { TimerControls } from './components/TimerControls';
 import { EmergencySystem } from './components/EmergencySystem';
 import { useTimer } from './hooks/useTimer';
 import { getStoredTheme, type Theme } from './lib/themes';
-import { ShieldAlert, Volume2, LogOut, Settings, Lock, Siren } from 'lucide-react';
+import { ShieldAlert, Volume2, LogOut, Settings, Lock, Siren, BookOpen } from 'lucide-react';
 import { WakeLockFallback } from './lib/nosleep';
 import { cn } from './lib/utils';
 import { auth, db, doc, onSnapshot, updateDoc, serverTimestamp } from './lib/firebase';
@@ -356,6 +356,19 @@ export default function App() {
           {!isAdmin ? (
             <div className="flex flex-col items-center gap-6">
               <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
+              
+              <a 
+                href="/MANUAL_DO_USUARIO.html" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-full transition-all group"
+              >
+                <BookOpen size={14} className="text-accent group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+                  Manual do Usuário
+                </span>
+              </a>
+
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setShowLogin(true)}
@@ -393,9 +406,19 @@ export default function App() {
                    onKickAdmins={handleKickOthers}
                     onEmergency={() => setShowEmergencyConfirm(true)}
                  />
-                 <div className="mt-8 flex flex-col items-center">
+                 <div className="mt-8 flex flex-col items-center gap-4">
                     <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
-
+                    <a 
+                      href="/MANUAL_DO_USUARIO.html" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-full transition-all group"
+                    >
+                      <BookOpen size={14} className="text-accent group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+                        Manual do Usuário
+                      </span>
+                    </a>
                  </div>
                </motion.div>
             </AnimatePresence>

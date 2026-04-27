@@ -14,6 +14,7 @@ interface EmergencyAlert {
   id: string;
   active: boolean;
   reporterName: string;
+  location?: string;
   timestamp: any;
 }
 
@@ -27,6 +28,7 @@ export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemP
   const [activeAlerts, setActiveAlerts] = useState<EmergencyAlert[]>([]);
   const [isReporting, setIsReporting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [location, setLocation] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   
@@ -112,8 +114,10 @@ export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemP
         timestamp: serverTimestamp(),
         reporterId: user.uid,
         reporterName: user.displayName || user.email?.split('@')[0] || 'Aplicador',
+        location: location.trim() || 'Não informada',
       });
       setShowConfirm(false);
+      setLocation('');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'emergencies');
     } finally {
@@ -171,9 +175,23 @@ export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemP
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-2 text-foreground">
                 Confirmar Emergência?
               </h2>
-              <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
+              <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
                 Este sinal alertará IMEDIATAMENTE a equipe de saúde e todos os outros aplicadores conectados.
               </p>
+
+              <div className="mb-6 text-left">
+                <label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground ml-2 mb-1 block">
+                  Sua Posição / Localização
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ex: Posto 5, Km 10, Curva 3..."
+                  className="w-full p-4 bg-muted border-2 border-transparent focus:border-red-600 rounded-2xl outline-none font-bold placeholder:text-muted-foreground/50 transition-all"
+                  autoFocus
+                />
+              </div>
               
               <div className="grid gap-3">
                 <button
@@ -242,6 +260,15 @@ export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemP
                   <p className="text-3xl font-black tracking-tight">
                     {activeAlerts[0].reporterName}
                   </p>
+
+                  <div className="mt-2 text-red-200">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
+                      Localização:
+                    </p>
+                    <p className="text-xl font-bold uppercase tracking-tight">
+                      {activeAlerts[0].location || 'Não informada'}
+                    </p>
+                  </div>
                   
                   {/* Timer Display in Gold */}
                   <div className="mt-4 pt-4 border-t border-white/10">
@@ -301,10 +328,15 @@ export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemP
             className="fixed top-0 left-0 right-0 z-[110] bg-red-600 text-white p-3 flex items-center justify-center gap-3 shadow-xl cursor-pointer hover:bg-red-700 transition-colors"
           >
             <Siren size={20} className="animate-pulse" />
-            <span className="font-black uppercase tracking-tighter text-sm">
-              EMERGÊNCIA ATIVA: {activeAlerts[0].reporterName}
-            </span>
-            <span className="text-[10px] bg-white/20 px-2 py-1 rounded-full font-bold uppercase ml-2 animate-bounce">
+            <div className="flex flex-col items-start leading-none">
+              <span className="font-black uppercase tracking-tighter text-[10px] opacity-80">
+                EMERGÊNCIA ATIVA
+              </span>
+              <span className="font-bold text-xs">
+                {activeAlerts[0].reporterName} • {activeAlerts[0].location || 'S/ Local'}
+              </span>
+            </div>
+            <span className="text-[10px] bg-white/20 px-2 py-1 rounded-full font-bold uppercase ml-auto animate-bounce">
               Toque para Ver
             </span>
           </motion.div>

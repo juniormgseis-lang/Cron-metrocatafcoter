@@ -11,6 +11,10 @@ import {
   Timestamp,
   writeBatch,
   initializeFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
   type Firestore
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -97,6 +101,10 @@ export {
   serverTimestamp, 
   Timestamp, 
   writeBatch,
+  collection,
+  addDoc,
+  query,
+  where,
   signInAnonymously,
   onAuthStateChanged
 };

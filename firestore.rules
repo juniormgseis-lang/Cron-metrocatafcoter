@@ -104,5 +104,24 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if false; // Managed via Firebase Console for maximum security
     }
+
+    // --- Emergency Rules ---
+    function isValidEmergency(data) {
+      return data.active is bool
+        && data.timestamp is timestamp
+        && data.reporterId is string
+        && data.reporterId == request.auth.uid
+        && (data.reporterName == null || data.reporterName is string)
+        && data.keys().hasAll(['active', 'timestamp', 'reporterId'])
+        && data.keys().size() >= 3;
+    }
+
+    match /emergencies/{alertId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidEmergency(incoming()) && incoming().active == true;
+      allow update: if isSignedIn() 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['active', 'resolvedBy'])
+        && incoming().active == false;
+    }
   }
 }

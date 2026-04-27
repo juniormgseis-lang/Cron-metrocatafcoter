@@ -52,6 +52,34 @@
         }
       },
       "required": ["ping", "sample", "signature"]
+    },
+    "emergencyAlert": {
+      "title": "Emergency Alert",
+      "description": "Signal for immediate medical assistance",
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Whether the alert is still active"
+        },
+        "timestamp": {
+          "type": "object",
+          "description": "Firestore server timestamp of the alert"
+        },
+        "reporterId": {
+          "type": "string",
+          "description": "UID of the user who triggered the alert"
+        },
+        "reporterName": {
+          "type": "string",
+          "description": "Display name or email of the reporter"
+        },
+        "resolvedBy": {
+          "type": "string",
+          "description": "UID of the user who resolved the alert"
+        }
+      },
+      "required": ["active", "timestamp", "reporterId"]
     }
   },
   "firestore": {
@@ -66,6 +94,10 @@
     "/sessions/{sessionId}": {
       "schema": "clockSync",
       "description": "Per-session document used for precise clock calibration"
+    },
+    "/emergencies/{alertId}": {
+      "schema": "emergencyAlert",
+      "description": "Active and historical emergency alerts"
     }
   }
 }

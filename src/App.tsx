@@ -9,6 +9,7 @@ import { TafHeader } from './components/TafHeader';
 import { StatusBadge } from './components/StatusBadge';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
 import { TimerControls } from './components/TimerControls';
+import { EmergencySystem } from './components/EmergencySystem';
 import { useTimer } from './hooks/useTimer';
 import { getStoredTheme, type Theme } from './lib/themes';
 import { ShieldAlert, Volume2, LogOut, Settings, Lock } from 'lucide-react';
@@ -425,6 +426,9 @@ export default function App() {
           Limpar cache e atualizar aplicação
         </button>
       </footer>
+
+      {/* Emergency System Overlay & Trigger */}
+      <EmergencySystem user={user} isAdmin={isAdmin} timeDisplay={formatTime(elapsed)} />
 
       {/* Login Modal */}
       <AnimatePresence>

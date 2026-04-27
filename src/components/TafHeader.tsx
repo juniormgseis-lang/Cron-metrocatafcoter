@@ -1,4 +1,6 @@
 
+import { BookOpen } from 'lucide-react';
+
 export function TafHeader() {
   return (
     <header className="w-full flex flex-col items-center justify-center p-6 bg-header-bg border-b border-border mb-8 shadow-2xl">
@@ -21,11 +23,23 @@ export function TafHeader() {
           </h2>
         </div>
       </div>
-      <div className="flex flex-col items-center w-fit">
-        <div className="h-px w-full bg-accent/50 mb-2" />
+      <div className="flex flex-col items-center w-full">
+        <div className="h-px w-full max-w-[300px] bg-accent/50 mb-2" />
         <h3 className="text-lg md:text-xl font-black text-foreground tracking-tighter uppercase italic">
           Teste de Aptidão Física (TAF)
         </h3>
+        
+        <a 
+          href="/MANUAL_DO_USUARIO.html" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="mt-3 flex items-center gap-2 px-4 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-full transition-all group"
+        >
+          <BookOpen size={14} className="text-accent group-hover:scale-110 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+            Manual do Usuário
+          </span>
+        </a>
       </div>
       <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-widest">
         Criado pelo ST Ernani P. Júnior

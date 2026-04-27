@@ -172,9 +172,15 @@ export default function App() {
   // Specific re-lock for critical timer events (warnings/finish)
   useEffect(() => {
     if (elapsed === 660 || elapsed === 720) {
-      requestWakeLock();
+      // Use a small delay and check if already locked to avoid crashing sensitive mobile browsers
+      const timer = setTimeout(() => {
+        if (!isWakeLocked) {
+          requestWakeLock().catch(() => {});
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [elapsed]);
+  }, [elapsed, isWakeLocked]);
 
   // Global Re-acquisition on Interaction
   // Mobile browsers often require a fresh gesture to keep the lock/video active

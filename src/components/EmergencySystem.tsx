@@ -39,41 +39,46 @@ export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setSh
   useEffect(() => {
     if (activeAlerts.length > prevAlertsCount.current && !isMuted) {
       const speak = () => {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance('Emergência reportada');
-          utterance.lang = 'pt-BR';
-          utterance.rate = 0.9; // Slightly slower for gravity
-          utterance.pitch = 0.8; // Lower pitch for masculine feel
+        try {
+          if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech to prevent queue build-up which crashes mobile browsers
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance('Emergência reportada');
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.1; // Slightly faster for immediate impact
+            utterance.pitch = 0.9;
 
-          // Find a male voice
-          const voices = window.speechSynthesis.getVoices();
-          const maleVoice = voices.find(v => 
-            v.lang.startsWith('pt') && 
-            (v.name.toLowerCase().includes('masculino') || 
-             v.name.toLowerCase().includes('male') || 
-             v.name.toLowerCase().includes('daniel') || 
-             v.name.toLowerCase().includes('felipe'))
-          );
-          
-          if (maleVoice) {
-            utterance.voice = maleVoice;
+            const voices = window.speechSynthesis.getVoices();
+            const maleVoice = voices.find(v => 
+              v.lang.startsWith('pt') && 
+              (v.name.toLowerCase().includes('masculino') || 
+               v.name.toLowerCase().includes('male') || 
+               v.name.toLowerCase().includes('daniel') || 
+               v.name.toLowerCase().includes('felipe'))
+            );
+            
+            if (maleVoice) utterance.voice = maleVoice;
+
+            // Handle errors to prevent app-wide crash
+            utterance.onerror = (e) => console.warn('Speech error:', e);
+            
+            window.speechSynthesis.speak(utterance);
           }
-
-          window.speechSynthesis.speak(utterance);
+        } catch (error) {
+          console.warn('Speech synthesis failed gracefully:', error);
         }
+
+        // Add haptic feedback (vibration)
+        try {
+          if ('vibrate' in navigator) {
+            navigator.vibrate([500, 200, 500, 200, 500]);
+          }
+        } catch (e) {}
       };
 
-      // Speak immediately
-      speak();
-      
-      // If voices aren't loaded yet, try again when they change
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          speak();
-          window.speechSynthesis.onvoiceschanged = null;
-        };
-      }
+      const timer = setTimeout(speak, 100);
+      return () => clearTimeout(timer);
     }
     prevAlertsCount.current = activeAlerts.length;
   }, [activeAlerts.length, isMuted]);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Pause, RotateCcw, LogOut, Users, AlertCircle, X } from 'lucide-react';
+import { Play, Pause, RotateCcw, LogOut, Users, AlertCircle, X, Siren } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { TimerState } from '../hooks/useTimer';
 import { cn } from '../lib/utils';
@@ -13,6 +13,7 @@ interface TimerControlsProps {
   onReset: () => void;
   onLogout: () => void;
   onKickAdmins: () => void;
+  onEmergency: () => void;
 }
 
 export function TimerControls({ 
@@ -23,7 +24,8 @@ export function TimerControls({
   onResume, 
   onReset, 
   onLogout,
-  onKickAdmins
+  onKickAdmins,
+  onEmergency
 }: TimerControlsProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -99,20 +101,27 @@ export function TimerControls({
 
       <div className="h-px bg-border w-full" />
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-3 gap-2 px-1">
         <button
           onClick={onKickAdmins}
-          className="flex items-center justify-center gap-2 p-3 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 p-2 px-3 text-[9px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all"
         >
-          <Users size={14} />
-          Desconectar outros admins
+          <Users size={12} />
+          Desconectar Admins
         </button>
         <button
           onClick={onLogout}
-          className="flex items-center justify-center gap-2 p-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 p-2 px-3 text-[9px] font-bold uppercase tracking-wider text-muted-foreground hover:bg-muted/50 rounded-xl border border-transparent hover:border-border transition-all"
         >
-          <LogOut size={14} />
-          Sair do modo admin
+          <LogOut size={12} />
+          Sair Admin
+        </button>
+        <button
+          onClick={onEmergency}
+          className="flex items-center justify-center gap-2 p-2 px-3 text-[9px] font-black uppercase tracking-wider bg-red-600 text-white rounded-xl shadow-lg shadow-red-600/20 animate-pulse active:scale-95 transition-all"
+        >
+          <Siren size={12} />
+          SOS
         </button>
       </div>
 

@@ -22,59 +22,66 @@ interface EmergencySystemProps {
   user: any;
   isAdmin: boolean;
   timeDisplay: string;
+  showConfirm: boolean;
+  setShowConfirm: (val: boolean) => void;
 }
 
-export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemProps) {
+export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setShowConfirm }: EmergencySystemProps) {
   const [activeAlerts, setActiveAlerts] = useState<EmergencyAlert[]>([]);
   const [isReporting, setIsReporting] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [location, setLocation] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const prevAlertsCount = useRef(0);
 
-  // Siren Audio Logic
+  // Voice Alert Logic
   useEffect(() => {
-    if (activeAlerts.length > 0 && !isMuted && !isMinimized) {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
+    if (activeAlerts.length > prevAlertsCount.current && !isMuted) {
+      const speak = () => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance('Emergência reportada');
+          utterance.lang = 'pt-BR';
+          utterance.rate = 0.9; // Slightly slower for gravity
+          utterance.pitch = 0.8; // Lower pitch for masculine feel
 
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
+          // Find a male voice
+          const voices = window.speechSynthesis.getVoices();
+          const maleVoice = voices.find(v => 
+            v.lang.startsWith('pt') && 
+            (v.name.toLowerCase().includes('masculino') || 
+             v.name.toLowerCase().includes('male') || 
+             v.name.toLowerCase().includes('daniel') || 
+             v.name.toLowerCase().includes('felipe'))
+          );
+          
+          if (maleVoice) {
+            utterance.voice = maleVoice;
+          }
 
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime); // Low volume but audible
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      
-      oscillatorRef.current = osc;
-
-      // Ambulance oscillation pattern (Hi-Lo)
-      const interval = setInterval(() => {
-        if (oscillatorRef.current && ctx) {
-          const currentFreq = oscillatorRef.current.frequency.value;
-          const nextFreq = currentFreq === 440 ? 587.33 : 440; // A4 to D5
-          oscillatorRef.current.frequency.setTargetAtTime(nextFreq, ctx.currentTime, 0.05);
+          window.speechSynthesis.speak(utterance);
         }
-      }, 500);
-
-      return () => {
-        clearInterval(interval);
-        osc.stop();
-        osc.disconnect();
       };
+
+      // Speak immediately
+      speak();
+      
+      // If voices aren't loaded yet, try again when they change
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          speak();
+          window.speechSynthesis.onvoiceschanged = null;
+        };
+      }
     }
+    prevAlertsCount.current = activeAlerts.length;
+  }, [activeAlerts.length, isMuted]);
+
+  // Siren Audio Logic - REMOVED oscillator in favor of Speech
+  useEffect(() => {
+    // We can also have a subtle repeating alert if desired, but user specifically asked for "Emergência reportada"
+    // For now, we only speak when a new one arrives.
   }, [activeAlerts.length, isMuted, isMinimized]);
 
   // Listen for active emergencies
@@ -140,21 +147,6 @@ export function EmergencySystem({ user, isAdmin, timeDisplay }: EmergencySystemP
 
   return (
     <>
-      {/* The Floating Emergency Button (Now accessible to everyone authenticated) */}
-      {user && (
-        <div className="fixed bottom-24 right-4 z-40">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowConfirm(true)}
-            className="flex flex-col items-center justify-center w-20 h-20 rounded-full bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] border-4 border-white/20 animate-pulse"
-          >
-            <AlertTriangle size={28} />
-            <span className="text-[10px] font-black uppercase mt-1">SOS</span>
-          </motion.button>
-        </div>
-      )}
-
       {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirm && (

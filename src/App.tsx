@@ -12,7 +12,7 @@ import { TimerControls } from './components/TimerControls';
 import { EmergencySystem } from './components/EmergencySystem';
 import { useTimer } from './hooks/useTimer';
 import { getStoredTheme, type Theme } from './lib/themes';
-import { ShieldAlert, Volume2, LogOut, Settings, Lock } from 'lucide-react';
+import { ShieldAlert, Volume2, LogOut, Settings, Lock, Siren } from 'lucide-react';
 import { WakeLockFallback } from './lib/nosleep';
 import { cn } from './lib/utils';
 import { auth, db, doc, onSnapshot, updateDoc, serverTimestamp } from './lib/firebase';
@@ -295,6 +295,8 @@ export default function App() {
     }
   };
 
+  const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-background text-foreground transition-colors overflow-hidden border border-primary/20">
       <TafHeader />
@@ -348,13 +350,23 @@ export default function App() {
           {!isAdmin ? (
             <div className="flex flex-col items-center gap-6">
               <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
-              <button
-                onClick={() => setShowLogin(true)}
-                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ShieldAlert size={14} />
-                Área Administrativa
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ShieldAlert size={14} />
+                  Área Administrativa
+                </button>
+                <div className="w-px h-3 bg-border/50" />
+                <button
+                  onClick={() => setShowEmergencyConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-[11px] font-black uppercase rounded-full shadow-lg shadow-red-600/30 active:scale-95 transition-all animate-pulse hover:bg-red-700"
+                >
+                  <Siren size={14} />
+                  SOS
+                </button>
+              </div>
             </div>
           ) : (
             <AnimatePresence>
@@ -373,9 +385,11 @@ export default function App() {
                    onReset={reset}
                    onLogout={handleLogout}
                    onKickAdmins={handleKickOthers}
+                    onEmergency={() => setShowEmergencyConfirm(true)}
                  />
-                 <div className="mt-8">
+                 <div className="mt-8 flex flex-col items-center">
                     <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
+
                  </div>
                </motion.div>
             </AnimatePresence>
@@ -428,7 +442,13 @@ export default function App() {
       </footer>
 
       {/* Emergency System Overlay & Trigger */}
-      <EmergencySystem user={user} isAdmin={isAdmin} timeDisplay={formatTime(elapsed)} />
+      <EmergencySystem 
+        user={user} 
+        isAdmin={isAdmin} 
+        timeDisplay={formatTime(elapsed)} 
+        showConfirm={showEmergencyConfirm}
+        setShowConfirm={setShowEmergencyConfirm}
+      />
 
       {/* Login Modal */}
       <AnimatePresence>

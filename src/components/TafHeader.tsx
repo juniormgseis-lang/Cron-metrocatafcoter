@@ -23,8 +23,8 @@ export function TafHeader() {
       </div>
       <div className="flex flex-col items-center w-full">
         <div className="h-px w-full max-w-[300px] bg-accent/50 mb-2" />
-        <h3 className="text-lg md:text-xl font-black text-foreground tracking-tighter uppercase italic">
-          Teste de Aptidão Física (TAF)
+        <h3 className="text-sm md:text-lg font-black text-foreground tracking-tighter uppercase italic text-center max-w-[600px]">
+          Sistema de Apoio à Aplicação da Corrida do Teste de Aptidão Física (TAF)
         </h3>
       </div>
       <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-widest">

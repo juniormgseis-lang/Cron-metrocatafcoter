@@ -28,12 +28,27 @@ interface EmergencySystemProps {
 
 export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setShowConfirm }: EmergencySystemProps) {
   const [activeAlerts, setActiveAlerts] = useState<EmergencyAlert[]>([]);
+  const [currentAlertIndex, setCurrentAlertIndex] = useState(0);
   const [isReporting, setIsReporting] = useState(false);
   const [location, setLocation] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   
   const prevAlertsCount = useRef(0);
+
+  // Rotation logic for multiple alerts
+  useEffect(() => {
+    if (activeAlerts.length <= 1) {
+      setCurrentAlertIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setCurrentAlertIndex((prev) => (prev + 1) % activeAlerts.length);
+    }, 4000); // Rotate every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [activeAlerts.length]);
 
   // Voice Alert Logic
   useEffect(() => {
@@ -237,58 +252,64 @@ export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setSh
               </button>
 
               <motion.div
-                animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-                transition={{ repeat: Infinity, duration: 0.5, repeatDelay: 1 }}
-                className="bg-white p-6 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl"
+                key={`icon-${currentAlertIndex}`}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, rotate: [0, -10, 10, -10, 10, 0] }}
+                transition={{ duration: 0.3, rotate: { repeat: Infinity, duration: 0.5, repeatDelay: 1 } }}
+                className="bg-white p-6 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6 shadow-2xl"
               >
                 <Siren size={60} className="text-red-600" />
               </motion.div>
 
-              <h1 className="text-5xl font-black uppercase tracking-tighter mb-4 drop-shadow-lg">
-                EMERGÊNCIA MÉDICA!
-              </h1>
-              
-              <div className="mb-8">
-                {/* Fixed the duplicate text by simplified layout and using only the latest if multiple */}
-                <div className="bg-white/10 border border-white/20 p-6 rounded-[2rem] backdrop-blur-md">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-1">
-                    Relatado por:
-                  </p>
-                  <p className="text-3xl font-black tracking-tight">
-                    {activeAlerts[0].reporterName}
-                  </p>
-
-                  <div className="mt-2 text-red-200">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                      Localização:
-                    </p>
-                    <p className="text-xl font-bold uppercase tracking-tight">
-                      {activeAlerts[0].location || 'Não informada'}
-                    </p>
-                  </div>
-                  
-                  {/* Timer Display in Gold */}
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
-                      Cronômetro Ativo
-                    </p>
-                    <p className="text-5xl font-black font-mono tracking-tighter text-[#FFD700] drop-shadow-[0_2px_10px_rgba(255,215,0,0.3)]">
-                      {timeDisplay}
-                    </p>
-                  </div>
-
-                  {activeAlerts.length > 1 && (
-                    <p className="text-xs font-bold mt-2 opacity-60">
-                      + {activeAlerts.length - 1} outros alertas ativos
-                    </p>
-                  )}
-                </div>
+              <div className="mb-2">
+                <span className="bg-white text-red-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
+                  EMERGÊNCIA MÉDICA {activeAlerts.length > 1 && `(${currentAlertIndex + 1} de ${activeAlerts.length})`}
+                </span>
               </div>
+              
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={activeAlerts[currentAlertIndex]?.id || 'alert'}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="mb-8"
+                >
+                  <div className="bg-white/10 border border-white/20 p-6 rounded-[2rem] backdrop-blur-md">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-1">
+                      Relatado por:
+                    </p>
+                    <p className="text-3xl font-black tracking-tight">
+                      {activeAlerts[currentAlertIndex].reporterName}
+                    </p>
+
+                    <div className="mt-2 text-red-200">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
+                        Localização:
+                      </p>
+                      <p className="text-xl font-bold uppercase tracking-tight">
+                        {activeAlerts[currentAlertIndex].location || 'Não informada'}
+                      </p>
+                    </div>
+                    
+                    {/* Timer Display in Gold */}
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
+                        Cronômetro Ativo
+                      </p>
+                      <p className="text-5xl font-black font-mono tracking-tighter text-[#FFD700] drop-shadow-[0_2px_10px_rgba(255,215,0,0.3)]">
+                        {timeDisplay}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
 
               <div className="flex flex-col gap-3">
                 {isAdmin ? (
                   <button
-                    onClick={() => resolveEmergency(activeAlerts[0].id)}
+                    onClick={() => resolveEmergency(activeAlerts[currentAlertIndex].id)}
                     className="w-full flex items-center justify-center gap-3 p-6 bg-white text-red-600 font-extrabold uppercase rounded-[2rem] shadow-2xl active:scale-95 transition-transform"
                   >
                     <CheckCircle2 />
@@ -327,11 +348,19 @@ export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setSh
             <Siren size={20} className="animate-pulse" />
             <div className="flex flex-col items-start leading-none">
               <span className="font-black uppercase tracking-tighter text-[10px] opacity-80">
-                EMERGÊNCIA ATIVA
+                EMERGÊNCIA ATIVA {activeAlerts.length > 1 && `(${currentAlertIndex + 1} de ${activeAlerts.length})`}
               </span>
-              <span className="font-bold text-xs">
-                {activeAlerts[0].reporterName} • {activeAlerts[0].location || 'S/ Local'}
-              </span>
+              <AnimatePresence mode="wait">
+                <motion.span 
+                  key={activeAlerts[currentAlertIndex]?.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="font-bold text-xs"
+                >
+                  {activeAlerts[currentAlertIndex].reporterName} • {activeAlerts[currentAlertIndex].location || 'S/ Local'}
+                </motion.span>
+              </AnimatePresence>
             </div>
             <span className="text-[10px] bg-white/20 px-2 py-1 rounded-full font-bold uppercase ml-auto animate-bounce">
               Toque para Ver

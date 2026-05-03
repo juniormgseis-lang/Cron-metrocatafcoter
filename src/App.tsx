@@ -12,7 +12,7 @@ import { TimerControls } from './components/TimerControls';
 import { EmergencySystem } from './components/EmergencySystem';
 import { useTimer } from './hooks/useTimer';
 import { getStoredTheme, type Theme } from './lib/themes';
-import { ShieldAlert, Volume2, LogOut, Settings, Lock, Siren, BookOpen } from 'lucide-react';
+import { ShieldAlert, Volume2, LogOut, Settings, Lock, Unlock, Siren, BookOpen } from 'lucide-react';
 import { WakeLockFallback } from './lib/nosleep';
 import { cn } from './lib/utils';
 import { auth, db, doc, onSnapshot, updateDoc, serverTimestamp } from './lib/firebase';
@@ -424,38 +424,24 @@ export default function App() {
             </AnimatePresence>
           )}
 
-          {/* Wake Lock Button (Bottom Position) */}
-          <div className="w-full max-w-md flex flex-col gap-3">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+          {/* Wake Lock Button (Bottom Position) - Now more compact and discreet */}
+          <div className="w-full flex flex-col items-center">
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={toggleManualWakeLock}
               className={cn(
-                "p-1 rounded-2xl transition-all duration-500",
+                "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
                 manualWakeLock 
-                  ? "bg-gradient-to-r from-orange-500/30 via-accent/30 to-orange-500/30 shadow-lg" 
-                  : "bg-muted/50 border border-border/50"
+                  ? "bg-orange-500/10 text-orange-500 border-orange-500/20" 
+                  : "bg-muted/30 text-muted-foreground border-border/10"
               )}
             >
-              <button
-                onClick={toggleManualWakeLock}
-                className="w-full flex items-center justify-center gap-3 p-4 bg-card text-foreground rounded-[14px] font-bold uppercase tracking-tighter shadow-inner active:scale-95 transition-all hover:bg-muted"
-              >
-                <div className={cn(
-                  "p-2 rounded-full transition-colors",
-                  manualWakeLock ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"
-                )}>
-                  {manualWakeLock ? <Lock size={20} /> : <Settings size={20} />}
-                </div>
-                <div className="flex flex-col items-start translate-y-0.5">
-                  <span className="text-sm leading-none">
-                    {manualWakeLock ? "Tela Travada (Ligada)" : "Tela Livre (Pode Apagar)"}
-                  </span>
-                  <span className="text-[10px] font-medium opacity-60 normal-case mt-1">
-                    {manualWakeLock ? "O app manterá sua tela sempre ativa" : "Clique para impedir que a tela apague"}
-                  </span>
-                </div>
-              </button>
-            </motion.div>
+              {manualWakeLock ? <Lock size={12} /> : <Unlock size={12} />}
+              <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
+                {manualWakeLock ? "Tela Travada" : "Tela Livre"}
+              </span>
+            </motion.button>
           </div>
         </div>
       </div>

@@ -29,6 +29,11 @@ interface EmergencySystemProps {
 export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setShowConfirm }: EmergencySystemProps) {
   const [activeAlerts, setActiveAlerts] = useState<EmergencyAlert[]>([]);
   const [currentAlertIndex, setCurrentAlertIndex] = useState(0);
+  
+  // Safe access to the current alert to prevent "black screen" crashes during rapid updates
+  const safeIndex = activeAlerts.length > 0 ? currentAlertIndex % activeAlerts.length : 0;
+  const currentAlert = activeAlerts[safeIndex];
+
   const [isReporting, setIsReporting] = useState(false);
   const [location, setLocation] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
@@ -252,7 +257,7 @@ export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setSh
               </button>
 
               <motion.div
-                key={`icon-${currentAlertIndex}`}
+                key={`icon-${safeIndex}`}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1, rotate: [0, -10, 10, -10, 10, 0] }}
                 transition={{ duration: 0.3, rotate: { repeat: Infinity, duration: 0.5, repeatDelay: 1 } }}
@@ -263,53 +268,55 @@ export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setSh
 
               <div className="mb-2">
                 <span className="bg-white text-red-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
-                  EMERGÊNCIA MÉDICA {activeAlerts.length > 1 && `(${currentAlertIndex + 1} de ${activeAlerts.length})`}
+                  EMERGÊNCIA MÉDICA {activeAlerts.length > 1 && `(${safeIndex + 1} de ${activeAlerts.length})`}
                 </span>
               </div>
               
               <AnimatePresence mode="wait">
-                <motion.div 
-                  key={activeAlerts[currentAlertIndex]?.id || 'alert'}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="mb-8"
-                >
-                  <div className="bg-white/10 border border-white/20 p-6 rounded-[2rem] backdrop-blur-md">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-1">
-                      Relatado por:
-                    </p>
-                    <p className="text-3xl font-black tracking-tight">
-                      {activeAlerts[currentAlertIndex].reporterName}
-                    </p>
+                {currentAlert && (
+                  <motion.div 
+                    key={currentAlert.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="mb-8"
+                  >
+                    <div className="bg-white/10 border border-white/20 p-6 rounded-[2rem] backdrop-blur-md">
+                      <p class="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-1">
+                        Relatado por:
+                      </p>
+                      <p class="text-3xl font-black tracking-tight">
+                        {currentAlert.reporterName}
+                      </p>
 
-                    <div className="mt-2 text-red-200">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                        Localização:
-                      </p>
-                      <p className="text-xl font-bold uppercase tracking-tight">
-                        {activeAlerts[currentAlertIndex].location || 'Não informada'}
-                      </p>
+                      <div className="mt-2 text-red-200">
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
+                          Localização:
+                        </p>
+                        <p class="text-xl font-bold uppercase tracking-tight">
+                          {currentAlert.location || 'Não informada'}
+                        </p>
+                      </div>
+                      
+                      {/* Timer Display in Gold */}
+                      <div className="mt-4 pt-4 border-t border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
+                          Cronômetro Ativo
+                        </p>
+                        <p class="text-5xl font-black font-mono tracking-tighter text-[#FFD700] drop-shadow-[0_2px_10px_rgba(255,215,0,0.3)]">
+                          {timeDisplay}
+                        </p>
+                      </div>
                     </div>
-                    
-                    {/* Timer Display in Gold */}
-                    <div className="mt-4 pt-4 border-t border-white/10">
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
-                        Cronômetro Ativo
-                      </p>
-                      <p className="text-5xl font-black font-mono tracking-tighter text-[#FFD700] drop-shadow-[0_2px_10px_rgba(255,215,0,0.3)]">
-                        {timeDisplay}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                )}
               </AnimatePresence>
 
               <div className="flex flex-col gap-3">
-                {isAdmin ? (
+                {isAdmin && currentAlert ? (
                   <button
-                    onClick={() => resolveEmergency(activeAlerts[currentAlertIndex].id)}
+                    onClick={() => resolveEmergency(currentAlert.id)}
                     className="w-full flex items-center justify-center gap-3 p-6 bg-white text-red-600 font-extrabold uppercase rounded-[2rem] shadow-2xl active:scale-95 transition-transform"
                   >
                     <CheckCircle2 />
@@ -348,18 +355,20 @@ export function EmergencySystem({ user, isAdmin, timeDisplay, showConfirm, setSh
             <Siren size={20} className="animate-pulse" />
             <div className="flex flex-col items-start leading-none">
               <span className="font-black uppercase tracking-tighter text-[10px] opacity-80">
-                EMERGÊNCIA ATIVA {activeAlerts.length > 1 && `(${currentAlertIndex + 1} de ${activeAlerts.length})`}
+                EMERGÊNCIA ATIVA {activeAlerts.length > 1 && `(${safeIndex + 1} de ${activeAlerts.length})`}
               </span>
               <AnimatePresence mode="wait">
-                <motion.span 
-                  key={activeAlerts[currentAlertIndex]?.id}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="font-bold text-xs"
-                >
-                  {activeAlerts[currentAlertIndex].reporterName} • {activeAlerts[currentAlertIndex].location || 'S/ Local'}
-                </motion.span>
+                {currentAlert && (
+                  <motion.span 
+                    key={currentAlert.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="font-bold text-xs"
+                  >
+                    {currentAlert.reporterName} • {currentAlert.location || 'S/ Local'}
+                  </motion.span>
+                )}
               </AnimatePresence>
             </div>
             <span className="text-[10px] bg-white/20 px-2 py-1 rounded-full font-bold uppercase ml-auto animate-bounce">

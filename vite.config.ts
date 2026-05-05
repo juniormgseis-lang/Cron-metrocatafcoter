@@ -4,34 +4,32 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    plugins: [
-      react(), 
-      tailwindcss(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        manifest: {
-          name: 'Cronômetro TAF COTER',
-          short_name: 'TAF Timer',
-          description: 'Cronômetro sincronizado para Teste de Aptidão Física',
-          theme_color: '#1a240b',
-          icons: [
-            {
-              src: 'pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png'
-            }
-          ]
-        }
-      })
-    ],
+    plugins: [react(), tailwindcss(), VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'Cronômetro TAF COTER',
+        short_name: 'TAF Timer',
+        description: 'Cronômetro sincronizado para Teste de Aptidão Física',
+        theme_color: '#1a240b',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    }), cloudflare()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },

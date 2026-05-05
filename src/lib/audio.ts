@@ -68,27 +68,47 @@ export async function requestNotificationPermission() {
 // Specific alerts
 export const alerts = {
   start: () => {
-    playBeep(880, 'sine', 0.3);
     vibrate(100);
+    setTimeout(() => playBeep(880, 'sine', 0.3), 50);
   },
   minute: () => {
     playBeep(700, 'sine', 0.2);
   },
   elevenMinutes: () => {
-    // 3 beeps (sawtooth 660Hz) + voice + vibration + notification
-    for (let i = 0; i < 3; i++) {
-       setTimeout(() => playBeep(660, 'sawtooth', 0.2), i * 300);
-    }
-    speak("Onze minutos de prova");
+    // Staggered sequence to prevent CPU spikes
     vibrate([200, 100, 200, 100, 200]);
-    notify("Cronômetro TAF", "Atenção: 11 minutos de prova decorridos.");
+    
+    // Audio sequence slightly delayed after vibration starts
+    setTimeout(() => {
+      for (let i = 0; i < 3; i++) {
+         setTimeout(() => playBeep(660, 'sawtooth', 0.2), i * 300);
+      }
+    }, 300);
+
+    // Voice announcement after beep sequence
+    setTimeout(() => {
+      speak("Falta um minuto");
+    }, 1500);
+
+    // System notification removed to prevent UI freezes on mobile
+    // notify("Cronômetro TAF", "Atenção: 11 minutos de prova decorridos.");
   },
   twelveMinutes: () => {
-    // final sequence (square 440Hz + sawtooth 880Hz) + voice + long vibration + notification
-    playBeep(440, 'square', 0.5);
-    setTimeout(() => playBeep(880, 'sawtooth', 0.5), 300);
-    speak("Doze minutos, fim de prova");
+    // Long vibration first
     vibrate([500, 200, 500, 200, 1000]);
-    notify("Cronômetro TAF", "Fim de prova: 12 minutos atingidos.");
+    
+    // Final beeps
+    setTimeout(() => {
+      playBeep(440, 'square', 0.5);
+      setTimeout(() => playBeep(880, 'sawtooth', 0.5), 600);
+    }, 500);
+
+    // Voice announcement
+    setTimeout(() => {
+      speak("Doze minutos, fim de prova");
+    }, 2000);
+
+    // System notification removed to prevent UI freezes on mobile
+    // notify("Cronômetro TAF", "Fim de prova: 12 minutos atingidos.");
   }
 };

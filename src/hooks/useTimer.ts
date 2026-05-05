@@ -62,15 +62,15 @@ export function useTimer() {
         const duration = (now - startMillis) + data.accumulatedTime;
         const totalSecs = Math.floor(duration / 1000);
         
-        if (totalSecs >= MAX_SECONDS) {
-          setElapsed(MAX_SECONDS);
-        } else {
-          setElapsed(Math.max(0, totalSecs));
-        }
+        const finalSecs = totalSecs >= MAX_SECONDS ? MAX_SECONDS : Math.max(0, totalSecs);
+        
+        // ONLY update state if the second has actually changed
+        setElapsed(prev => prev !== finalSecs ? finalSecs : prev);
       } else if (data.state === 'paused' || data.state === 'idle') {
-        setElapsed(Math.floor(data.accumulatedTime / 1000));
+        const finalSecs = Math.floor(data.accumulatedTime / 1000);
+        setElapsed(prev => prev !== finalSecs ? finalSecs : prev);
       } else if (data.state === 'finished') {
-        setElapsed(MAX_SECONDS);
+        setElapsed(prev => prev !== MAX_SECONDS ? MAX_SECONDS : prev);
       }
 
       rafId = requestAnimationFrame(render);
@@ -166,7 +166,8 @@ export function useTimer() {
     if (currentSecs >= MAX_SECONDS && !firedAlerts.current.has(12)) {
       alerts.twelveMinutes();
       firedAlerts.current.add(12);
-      finish();
+      // Delay the network commit slightly to allow audio/vibration to initialize smoothly
+      setTimeout(() => finish(), 2000);
     }
   }, [elapsed, state, finish]);
 
